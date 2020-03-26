@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-#################################
-# author = Drew Afromsky        #
-# email = daa2162@columbia.edu  #
-#################################
-
-#### Code was completed by Drew Afromsky for the assignment for Nerual Networks and Deep Learning, ECBM 4040, @Columbia University, Fall 2019 ###
-
 import tensorflow as tf
 from tensorflow.contrib.rnn import RNNCell
 from tensorflow.python.ops import array_ops, nn_ops, init_ops, math_ops
@@ -14,14 +7,14 @@ from tensorflow.python.ops import variable_scope as vs
 
 
 class MyLSTMCell(RNNCell):
+    
     """
     LSTMCell implementation that is compatible with TensorFlow. To solve the compatibility issue, this
     class inherits TensorFlow RNNCell class.
-
-    This is basically rewriting the TensorFlow LSTMCell, but with your own language.
     """
 
     def __init__(self, num_units, num_proj, forget_bias=1.0, activation=None):
+        
         """
         Initialize a class instance.
 
@@ -38,6 +31,7 @@ class MyLSTMCell(RNNCell):
 
         There are biases used in other gates, but since TensorFlow doesn't have them, we don't implement them either.
         """
+        
         super(MyLSTMCell, self).__init__(_reuse=None)
         self.num_units = num_units
         self.num_proj = num_proj
@@ -47,6 +41,7 @@ class MyLSTMCell(RNNCell):
     # The following 2 properties are required when defining a TensorFlow RNNCell.
     @property
     def state_size(self):
+        
         """
         Overrides parent class method. Returns the state size of of the cell.
 
@@ -54,18 +49,22 @@ class MyLSTMCell(RNNCell):
 
         :return:'' An integer.
         """
+        
         return self.num_units + self.num_proj
 
     @property
     def output_size(self):
+        
         """
         Overrides parent class method. Returns the output size of the cell.
 
         :return: An integer.
         """
+        
         return self.num_proj
 
     def call(self, inputs, state):
+        
         """
         Run one time step of the cell. Given the current inputs and the state from the last time step, calculate the current state and cell output.
 
@@ -73,6 +72,7 @@ class MyLSTMCell(RNNCell):
         :param state:  The state value of the cell from the last time step. The state size can be found from function state_size(self).
         :return: A tuple containing (output, new_state). For details check TensorFlow LSTMCell class.
         """
+        
         c = tf.slice(state, [0, 0], [-1, self.num_units])
         h = tf.slice(state, [0, self.num_units], [-1, self.num_proj])
 
