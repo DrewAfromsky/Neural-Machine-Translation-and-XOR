@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-#################################
-# author = Drew Afromsky        #
-# email = daa2162@columbia.edu  #
-#################################
-
-#### Code was completed by Drew Afromsky for the assignment for Nerual Networks and Deep Learning, ECBM 4040, @Columbia University, Fall 2019 ###
-
 import os
 import pickle
 import copy
@@ -37,18 +30,19 @@ def create_lookup_tables(text):
     for v_i, v in enumerate(vocab, len(CODES)):
         vocab_to_int[v] = v_i
 
-    # (2)
     int_to_vocab = {v_i: v for v, v_i in vocab_to_int.items()}
 
     return vocab_to_int, int_to_vocab
 
 def text_to_ids(source_text, target_text, source_vocab_to_int, target_vocab_to_int):
+    
     """
         source_text, target_text: raw string text to be converted
         source_vocab_to_int, target_vocab_to_int: lookup tables for 1st and 2nd args respectively
     
         return: A tuple of lists (source_id_text, target_id_text) converted
     """
+    
     # empty list of converted sentences
     source_text_id = []
     target_text_id = []
@@ -122,9 +116,11 @@ def load_preprocess():
 
 
 def enc_dec_model_inputs():
+    
     """
         This function creates the placeholders for the model inputs
     """
+    
     inputs = tf.placeholder(tf.int32, [None, None], name='input')
     targets = tf.placeholder(tf.int32, [None, None], name='targets') 
     
@@ -140,10 +136,12 @@ def hyperparam_inputs():
     return lr_rate, keep_prob
 
 def process_decoder_input(target_data, target_vocab_to_int, batch_size):
+    
     """
     Preprocess target data for decoder, add the <GO> tag to the start of the senteces
     :return: Preprocessed target data
     """
+    
     # get '<GO>' id
     go_id = target_vocab_to_int['<GO>']
     #drop the last word which is either <PAD> or <EOS>
@@ -156,9 +154,10 @@ def process_decoder_input(target_data, target_vocab_to_int, batch_size):
 def encoding_layer(rnn_inputs, rnn_size, num_layers, keep_prob, 
                    source_vocab_size, 
                    encoding_embedding_size, cell_type):
+    
     """
     creates the encoder part of seq2seq learning
-    we will use the paramters:
+    paramters:
         rnn_inputs: the input to the encoding layer of the shape (Batch_size,sentence_length)
         rnn_size : the size of the hidden state
         num_layers: number of RNN layers
@@ -175,6 +174,7 @@ def encoding_layer(rnn_inputs, rnn_size, num_layers, keep_prob,
 
     :return: tuple (rnn_outputs, rnn_final_state)
     """
+    
     embed = tf.contrib.layers.embed_sequence(rnn_inputs, 
                                              vocab_size=source_vocab_size, 
                                              embed_dim=encoding_embedding_size)
@@ -192,9 +192,10 @@ def encoding_layer(rnn_inputs, rnn_size, num_layers, keep_prob,
 def decoding_layer_train(encoder_state, dec_cell, dec_embed_input, 
                          target_sequence_length, max_target_sequence_length, 
                          output_layer, keep_prob):
+    
     """
-    Create a training process in decoding layer 
-    during training as we have the ground truth output. we use the ground truth output of the last layer as input 
+    Create a training process in decoding layer during training as we have the ground truth output. 
+    We use the ground truth output of the last layer as input 
     to the next cell. This is done using TrainingHelper
 
     args
@@ -209,6 +210,7 @@ def decoding_layer_train(encoder_state, dec_cell, dec_embed_input,
 
     :return: BasicDecoderOutput containing training logits of the shape (batch_size,target_sequence_length,target_vocab_size)
     """
+    
     dec_cell = tf.contrib.rnn.DropoutWrapper(dec_cell, 
                                              output_keep_prob=keep_prob)
     
@@ -231,9 +233,11 @@ def decoding_layer_train(encoder_state, dec_cell, dec_embed_input,
 def decoding_layer_infer(encoder_state, dec_cell, dec_embeddings, start_of_sequence_id,
                          end_of_sequence_id, max_target_sequence_length,
                         output_layer, batch_size, keep_prob):
+    
     """
-    Create a inference process in decoding layer 
-    during inference as we do not have the ground truth output. we use the decoder output of the last layer as input 
+    Create an inference process in decoding layer 
+    during inference as we do not have the ground truth output. 
+    We use the decoder output of the last layer as input 
     to the next cell. This is done using GreedyEmbeddingHelper
 
     args
@@ -250,6 +254,7 @@ def decoding_layer_infer(encoder_state, dec_cell, dec_embeddings, start_of_seque
     
     :return: BasicDecoderOutput containing inference output of shape (batch_size,target_sentence_length)
     """
+    
     dec_cell = tf.contrib.rnn.DropoutWrapper(dec_cell, 
                                              output_keep_prob=keep_prob)
     
@@ -275,7 +280,7 @@ def decoding_layer(dec_input, encoder_state,
     
     """
     Create decoding layer of seq2seq learning architecture.
-    we will use the paramters:
+    Paramters:
         dec_input: input to the decoder of the shape (Batch_size,sentence_length)
         encoder_state : the state of the last RNNcell of the encoder
         target_sequence_length : length of each sentence in target_language
@@ -343,10 +348,12 @@ def seq2seq_model(input_data, target_data, keep_prob, batch_size,
                   source_vocab_size, target_vocab_size,
                   enc_embedding_size, dec_embedding_size,
                   rnn_size, num_layers, target_vocab_to_int, cell_type):
+    
     """
     Build the Sequence-to-Sequence model
     :return: Tuple of (Training BasicDecoderOutput, Inference BasicDecoderOutput)
     """
+    
     enc_outputs, enc_states = encoding_layer(input_data, 
                                              rnn_size, 
                                              num_layers, 
@@ -375,14 +382,10 @@ def seq2seq_model(input_data, target_data, keep_prob, batch_size,
     return train_output, infer_output
 
 def my_optimizer(loss,grad_clip, learning_rate):
+    
     '''
-    build our optimizer
-    Unlike previous worries of gradient vanishing problem,
-    for some structures of rnn cells, the calculation of hidden layers' weights 
-    may lead to an "exploding gradient" effect where the value keeps growing.
-    To mitigate this, we use the gradient clipping trick. Whenever the gradients are updated, 
-    they are "clipped" to some reasonable range (like -5 to 5) so they will never get out of this range.
-    parameters we will use:
+    Build optimizer
+    Parameters:
     loss, grad_clip, learning_rate
     :param loss: the final loss calculated by the functions
     :param learning_rate: (float)
@@ -390,12 +393,8 @@ def my_optimizer(loss,grad_clip, learning_rate):
     we have to return:
     optimizer for later use
     '''
+    
     # using clipping gradients
-
-#     variables = tf.trainable_variables()
-#     gradients, x = tf.clip_by_global_norm(tf.gradients(loss, variables),grad_clip)
-#     opt = tf.train.AdamOptimizer(learning_rate)
-#     optimizer = opt.apply_gradients(zip(gradients, variables))
     
     optimizer = tf.train.AdamOptimizer(learning_rate)
     gradients = optimizer.compute_gradients(loss)
@@ -404,12 +403,16 @@ def my_optimizer(loss,grad_clip, learning_rate):
     return optimizer.apply_gradients(capped_gradients)
                         
 def pad_sentence_batch(sentence_batch, pad_int):
+    
     """Pad sentences with <PAD> so that each sentence of a batch has the same length"""
+    
     max_sentence = max([len(sentence) for sentence in sentence_batch])
     return [sentence + [pad_int] * (max_sentence - len(sentence)) for sentence in sentence_batch]
 
 def get_batches(sources, targets, batch_size, source_pad_int, target_pad_int):
+    
     """Batch targets, sources, and the lengths of their sentences together"""
+    
     for batch_i in range(0, len(sources)//batch_size):
         start_i = batch_i * batch_size
 
@@ -434,9 +437,11 @@ def get_batches(sources, targets, batch_size, source_pad_int, target_pad_int):
 
 
 def get_accuracy(target, logits):
+    
     """
     Calculate accuracy
     """
+    
     max_seq = max(target.shape[1], logits.shape[1])
     if max_seq - target.shape[1]:
         target = np.pad(
